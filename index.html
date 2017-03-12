@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.5.min.css">
+	<script src="phonegap.js"></script>
+	<script type="text/javascript" src="js/jquery.js"></script>	
+	<script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+<script type="text/javascript">
+ var opciones;
+ opciones={maximumAge:500000,enableHighAccuracy:true,timeout:5000};
+
+document.addEventListener("deviceready", onDeviceReady, false);
+function onDeviceReady(){
+		/*******Evento para registrar servicios*********/
+		$("#btnGuardar").tap(function (){	
+			var nom=$("#Nombre").val();
+			var dir=$("#Direccion").val();
+			var rfc=$("#RFC").val();
+			var tel=$("#Telefono").val();
+			var clasif=$("#clasificacion").val();
+			var foto="img/fotos/foto1.jpg";
+			var lat=$("#latitud").val();
+			var longit=$("#longitud").val();
+			alert("Datos Guardados Correctamente");								
+			$.ajax({
+				type:"POST",
+				url:"http://servicioslibres.esy.es/Guardar.php",
+				data:"Nom="+nom+"&Dir="+dir+"&Rfc="+rfc+"&Tel="+tel+"&Clasif="+clasif+"&Foto="+foto+"&Lat="+lat+"&Long="+longit,
+				success:function (datos) {
+					alert("Datos guardados correctamente: "+datos);
+				}
+			});
+		});
+
+		/**********Evento para consulta*************/
+		$("#btnConsServ").tap(function (){
+			$.ajax({
+				type:"POST",
+				url:"http://servicioslibres.esy.es/Consulta.php",
+				data:"",
+				success:function (datos) {
+					var reg=$.parseJSON(datos);
+					var fila=$("#datosTodos");
+					 for(var i in reg){
+					 	fila.append("<tr><td>"+reg[i].Id_servicio+"</td><td>"+reg[i].Nombre_servicio+"</td><td>"+reg[i].Direcccion+"</td><td>"+reg[i].RFC+"</td><td>"+reg[i].Telefono+"</td><td>"+reg[i].Clasificacion+"</td><td>"+reg[i].Foto+"</td><td>"+reg[i].Latitud+"</td><td>"+reg[i].Longitud+"</td></tr>");
+					 }
+					$("#tb1").table("refresh");
+				}
+			});
+		});
+		/**********Evento para consulta por id*************/
+		$("#btnConsServID").tap(function (){
+			var id=$("#S_id").val();
+			$.ajax({
+				type:"POST",
+				url:"http://servicioslibres.esy.es/consulta_id.php",
+				data:"ID="+id,
+				success:function (datos) {
+					var reg=$.parseJSON(datos);
+					var fila=$("#datosID");
+					 for(var i in reg){
+					 	fila.append("<tr><td>"+reg[i].Id_servicio+"</td><td>"+reg[i].Nombre_servicio+"</td><td>"+reg[i].Direccion+"</td><td>"+reg[i].RFC+"</td><td>"+reg[i].Telefono+"</td><td>"+reg[i].Clasificacion+"</td><td>"+reg[i].Foto+"</td><td>"+reg[i].Latitud+"</td><td>"+reg[i].Longitud+"</td></tr>");
+					 }
+					$("#tb2").table("refresh");
+				}
+			});
+		});
+		/**********Evento para eliminar por id*************/
+		$("#btnEliServID").tap(function (){
+			/*alert=("funciona"); */
+			var id=$("#E_id").val();
+			 alert("Dato eliminado: "+id);
+			$.ajax({
+				type:"POST",
+				url:"http://servicioslibres.esy.es/EliminarID.php",
+				data:"ID="+id,
+				success:function (datos) {
+					alert (datos);
+				}
+			});
+		});
+		/*selecciona id a actualizar */
+		$("#btnSeleccionar").tap(function (){
+			/*alert=("funciona"); */
+			var id=$("#Act_id").val();
+			alert("ID seleccionado: "+id);		
+			$.ajax({
+				type:"POST",
+				url:"http://servicioslibres.esy.es/consulta_id.php",
+				data:"ID="+id,
+				success:function (datos) {					
+					var reg=$.parseJSON(datos);
+					alert(datos);
+					for(var i in reg){
+					$("#NombreA").val(reg[i].Nombre_servicio);
+					$("#DireccionA").val(reg[i].Direccion);
+					$("#RFCA").val(reg[i].RFC);
+					$("#TelefonoA").val(reg[i].Telefono);	
+					$("#clasificacion").val(reg[i].Clasificacion);
+					$("#btnFoto").val(reg[i].Foto);
+					$("#latitudA").val(reg[i].Latitud);
+					$("#longitudA").val(reg[i].Longitud);
+
+				}
+				}
+			});
+		});
+
+/*******Evento para Actualizar servicios*********/
+		$("#btnActualizar").tap(function (){	
+			var id=parseInt($("#Act_id").val());
+			var nom=$("#Nombre1").val();
+			var dir=$("#Direccion1").val();
+			var rfc=$("#RFC1").val();
+			var tel=$("#Telefono1").val();
+			var clasif=$("#clasificacion1").val();
+			var foto="img/fotos/foto1.jpg";
+			var lat=$("#latitud1").val();
+			var longit=$("#longitud1").val();
+			alert("Funciona actualizar");								
+			$.ajax({
+				type:"POST",
+				url:"http://servicioslibres.esy.es/Actualizar.php",
+				data:"id="+id+"&Nom="+nom+"&Dir="+dir+"&Rfc="+rfc+"&Tel="+tel+"&Clasif="+clasif+"&Foto="+foto+"&Lat="+lat+"&Long="+longit,
+				success:function (datos) {
+					alert("Datos guardados correctamente: "+datos);
+				}
+			});
+		});
+	/***********Obtener Coordenadas***********************/
+	$("#btnCords").tap(function(){//Obtener coordenadas para el registro de servicios			
+  		obtenerUbicacion();
+	});
+	$("#btnFoto").tap(function (){//Capturar fotografia
+        navigator.device.capture.captureImage(function(mediaFiles){
+		    path = mediaFiles[0].fullPath;
+		    $('#regFoto').append('<img id="imagen" src="'+path+'" width="100%" />').attr('rel',path);
+	      },function(error){
+		        navigator.notification.alert('Error code: ' + error.code, null, 'Capture Error');
+	      },{limit:1});
+	    /*navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
+    	destinationType: Camera.DestinationType.FILE_URI });
+
+		function onSuccess(imageURI) {
+   			$('#regFoto').append('<img id="imagen" src="'+imageURI+'" width="100%" />').attr('rel',imageURI);
+		}
+
+		function onFail(message) {
+    		alert('Fallo al obtener la foto: ' + message);
+		}*/
+  	});
+}
+	function obtenerUbicacion(){//Funcion que obtiene la Ubicación del dispositivo móvil
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(exito, falla, opciones);
+
+	  function exito(posic){
+	      //var corUbic=new google.maps.LatLng(posic.coords.latitude, posic.coords.longitude);
+	      $("#latitud").val(posic.coords.latitude);
+	      $("#longitud").val(posic.coords.longitude);	      
+	     }
+
+	      function falla(error){
+	         alert("Error en el servicio Geolocalizador: "+error.code+" detalle: "+error.response);
+	      }
+	  }else{
+	      alert("Su dispositivo no soporta la geolocalización o no esta habilitada esta funcionalidad");
+	  }
+    }
+</script>
+	<style type="text/css">
+		p{
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div data-role="page" id="Principal" data-theme="b">
+		<div data-role="header">
+			<p>Menú principal</p>
+		</div>	
+		<div data-role="content">
+			<ul data-role="listview">
+				<li><a href="#Registrar">Registrar Servicios</a></li>	
+				<li><a href="#Consultar">Consultar Servicios</a></li>
+				<li><a href="#ConsultaID">Consultar Servicios por ID</a></li>
+				<li><a href="#Actualizar">Actualizar Servicios</a></li>
+				<li><a href="#EliminaID">Eliminar Servicios</a></li>
+				<li><a href="#DatosDesarrollador">Datos del Desarrollador</a></li>
+			</ul>	
+		</div>
+		<div data-role="footer">
+			<p></p>
+		</div>
+	</div>
+	<div data-role="page" id="Registrar" data-theme="b">
+		<div data-role="header">
+			<p>Registrar servicios</p>
+		</div>	
+		<div data-role="content">
+			<input type="text" id="Nombre" placeholder="Escribe el nombres del servicio">
+			<input type="text" id="Direccion" placeholder="Escribe la dirección">
+			<input type="text" id="RFC" placeholder="Escribe el RFC">
+			<input type="text" id="Telefono" placeholder="Escribe el número de teléfono">
+			<select id="clasificacion">
+				<option value="Hospital">Hospital</option>
+				<option value="Farmacia">Farmacia</option>
+				<option value="Restaurante">Restaurante</option>
+				<option value="Zapateria">Zapatería</option>				
+			</select>
+			<input type="button" id="btnFoto" value="Tomar foto">
+			<div id="regFoto"></div>
+			<input type="button" id="btnCords" value="Obtener coordenadas">
+			<input type="text" id="latitud" placeholder="Latitud">
+			<input type="text" id="longitud" placeholder="Longitud">
+			<input type="button" id="btnGuardar" value="Guardar servicio">
+		</div>
+		<div data-role="footer">
+			<p><a href="#Principal" class="ui-btn ui-icon-home ui-btn-icon-left">Regresar</a></p>
+		</div>
+	</div>	
+	<div data-role="page" id="Consultar" data-theme="b">
+		<div data-role="header">
+			<p>Consultar servicios</p>
+		</div>	
+		<div data-role="content">
+			<input type="button" id="btnConsServ" value="Consultar Todos los Servicios">
+			<div>
+			<table data-role="table" data-mode="columntoggle" class="ui-responsive" id="tb1">
+				<thead id="datosTodos">
+					<tr>
+						<th data-priority="1">Id</th>
+						<th data-priority="2">Nombre</th>
+						<th data-priority="3">Direción</th>
+						<th data-priority="4">RFC</th>
+						<th data-priority="5">Tel:</th>
+						<th data-priority="6">Clasif</th>
+						<th data-priority="7">Foto</th>
+						<th data-priority="8">Lat</th>
+						<th data-priority="9">Long</th>
+					</tr>
+				</thead>				
+				<tbody id="datosTodos">
+				</tbody>
+			</table>
+		<div data-role="footer">
+		<p><a href="#Principal" class="ui-btn ui-icon-home ui-btn-icon-left">Regresar</a></p>
+		</div>
+			</div>
+		</div>
+		</div>
+
+			<div data-role="page" id="ConsultaID" data-theme="b"> 	      
+		<div data-role="header">
+			<p>Consultar Servicios por ID</p>
+		</div>	
+		<div data-role="content">
+			<input type="text" id="S_id" placeholder="Escribe el ID del servicio">
+			<input type="button" id="btnConsServID" value="Consultar Servicio">
+			<div>
+			<table data-role="table" data-mode="columntoggle" class="ui-responsive" id="tb2">
+				<thead id="datosID">
+					<tr>
+						<th data-priority="1">Id</th>
+						<th data-priority="2">Nombre</th>
+						<th data-priority="3">Direción</th>
+						<th data-priority="4">RFC</th>
+						<th data-priority="5">Tel:</th>
+						<th data-priority="6">Clasif</th>
+						<th data-priority="7">Foto</th>
+						<th data-priority="8">Lat</th>
+						<th data-priority="9">Long</th>
+					</tr>
+				</thead>				
+				<tbody id="datosID">
+				</tbody>
+			</table>
+			</div>
+		</div>
+		<div data-role="footer">
+			<p><a href="#Principal" class="ui-btn ui-icon-home ui-btn-icon-left">Regresar</a></p>
+		</div>
+	</div>
+	<div data-role="page" id="EliminaID" data-theme="b"> 	      
+		<div data-role="header">
+			<p>Eliminar Servicios por ID</p>
+		</div>	
+		<div data-role="content">
+			<input type="text" id="E_id" placeholder="Escribe el ID del servicio a Eliminar">
+			<input type="button" id="btnEliServID" value="Eliminar Servicio">
+			<div>
+
+			</div>
+		</div>
+		<div data-role="footer">
+			<p><a href="#Principal" class="ui-btn ui-icon-home ui-btn-icon-left">Regresar</a></p>
+		</div>
+	</div>
+	<div data-role="page" id="DatosDesarrollador" data-theme="b"> 	      
+		<div data-role="header">
+			<p>Datos del Desarrollador</p>
+		</div>	
+		<p>Alumno: Marco Antonio Cantero Ramiro</p>
+		<p>Numero de Control: 13940316*</p>
+		<p>Telefono: 2761127455</p>
+		<p>E-mail: marck5_2@hotmail.com</p>
+		<p>Materia: Base de Datos Para Dispositivos Moviles.</p>
+		<div data-role="footer">
+			<p><a href="#Principal" class="ui-btn ui-icon-home ui-btn-icon-left">Regresar</a></p>
+		</div>
+	</div>
+	<div data-role="page" id="Actualizar" data-theme="b">
+		<div data-role="header">
+			<p>Actualizar servicios</p>
+		</div>	
+		<div data-role="content">
+			<label for="idact">ID:</label>
+
+		    <input type="text" id="Act_id" >
+
+			<input type="text" id="Nombre1" placeholder="Escribe el nombres del servicio">
+			<input type="text" id="Direccion1" placeholder="Escribe la dirección">
+			<input type="text" id="RFC1" placeholder="Escribe el RFC">
+			<input type="text" id="Telefono1" placeholder="Escribe el número de teléfono">
+			<select id="clasificacion1">
+				<option value="Restaurante">Restaurante</option>
+				<option value="Zapateria">Zapatería</option>
+				<option value="Farmacia">Farmacia</option>
+			</select>
+			<input type="text" id="latitud1" placeholder="Latitud">
+			<input type="text" id="longitud1" placeholder="Longitud">
+			<input type="button" id="btnActualizar" value="Actualizar servicio">
+		</div>
+		<div data-role="footer">
+			<p><a href="#Principal" class="ui-btn ui-icon-home ui-btn-icon-left">Regresar</a></p>
+		</div>
+	</div>	
+</body>
+</html>
